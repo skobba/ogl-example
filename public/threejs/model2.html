@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>My first three.js app</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <!-- <scrip src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.js"></scrip> -->
+
+    <script src="https://threejs.org/build/three.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://raw.githubusercontent.com/google/draco/master/javascript/example/DRACOLoader.js"></script>
+
+    
+
+    <script>
+  
+  var container;
+    var camera, controls, scene;
+    var oldObject;
+    var newObject;
+    var renderer;
+
+    var mouseX = 0;
+    var mouseY = 0;
+    var targetX = 0;
+    var targetY = 0;
+    var windowHalfX = window.innerWidth / 2;
+    var windowHalfY = window.innerHeight / 2;
+
+    init();
+    animate();
+
+    function init() {
+    container = document.getElementById("container");
+    scene = new THREE.Scene();
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xff502e);
+    container.appendChild(renderer.domElement);
+
+    camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 100);
+    // camera.position.set(0, 0, 5);
+    camera.position.set(-5, 10, 42);
+
+    document.addEventListener("mousemove", onDocumentMouseMove, false);
+    window.addEventListener("resize", onWindowResize, false);
+    } 
+
+    var dracoLoader = new THREE.DRACOLoader();
+    dracoLoader.setDecoderPath( "https://lopez-creative.com/threejs/examples/js/loaders/" );
+    dracoLoader.setDecoderConfig({ type: "js" });
+
+    var loader = new THREE.GLTFLoader();
+    loader.crossOrigin = true;
+    loader.setDRACOLoader(dracoLoader);
+    loader.load("https://lopez-creative.com/models/camera3-draco.glb", function( gltf ) {
+        var objectScene = gltf.scene;
+        var objectGroup = gltf.scene.children[0];
+        console.log(objectGroup);
+        
+        var objectGroupBase = objectGroup.clone();
+        objectGroupBase.traverse(node => {
+            if (!node.isMesh) return;
+            node.material = new THREE.MeshBasicMaterial({
+            color: 0xff502e
+            });
+        })
+        
+        objectGroup.traverse(node => {
+            if (!node.isMesh) return;
+            node.material = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.1
+            });
+        });
+    
+        // base mesh
+
+            // geometry = new THREE.SphereBufferGeometry();
+            // material = new THREE.MeshBasicMaterial( { color: 0xff502e } );
+            // mesh = new THREE.Mesh( geometry, material );
+            // scene.add( mesh );
+            
+            // wireframe helper
+            
+            // const wireframeGeometry = new THREE.WireframeGeometry( geometry );
+            // const wireframeMaterial = new THREE.LineBasicMaterial( { color: 0x000000 } );
+            // const wireframe = new THREE.LineSegments( wireframeGeometry, wireframeMaterial );
+            // mesh.add( wireframe );
+
+        objectGroupBase.rotation.x = Math.PI / 2;
+        objectGroupBase.rotation.y = 0;
+        objectGroupBase.rotation.z = Math.PI / 2;
+        
+        objectGroup.rotation.x = Math.PI / 2;
+        objectGroup.rotation.y = 0;
+        objectGroup.rotation.z = Math.PI / 2;
+
+        newObject = new THREE.Object3D();
+        newObject.rotation.x = -5;
+        newObject.add(objectGroup);
+        newObject.add(objectGroupBase);
+        
+        scene.add(newObject);
+    });
+
+    function render() {
+    targetX = mouseX * 0.001;
+    targetY = mouseY * 0.001;
+
+    if (newObject) {
+        newObject.rotation.y += 0.05 * (targetX - newObject.rotation.y);
+        newObject.rotation.x += 0.05 * (targetY - newObject.rotation.x);
+    }
+
+    renderer.render(scene, camera);
+    }
+
+    function animate() {
+    requestAnimationFrame(animate);
+    render();
+    }
+
+    function onWindowResize() {
+    windowHalfX = window.innerWidth / 2;
+    windowHalfY = window.innerHeight / 2;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onDocumentMouseMove(event) {
+    mouseX = event.clientX - windowHalfX;
+    mouseY = event.clientY - windowHalfY;
+    }
+
+    THREE.DefaultLoadingManager.onLoad = function() {
+    console.log("Loading Complete!");
+    container.classList.add("loaded");
+    };
+
+    </script>
+</body>
+</html>
